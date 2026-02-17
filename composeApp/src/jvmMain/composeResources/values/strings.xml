@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">De Proguard</string>
+    <string name="language">en_US</string>
+    <string name="tab_home_name">Home</string>
+    <string name="tab_proguard_name">Anti-obfuscation</string>
+    <string name="tab_setting_name">Settings</string>
+</resources>
