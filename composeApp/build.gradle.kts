@@ -52,13 +52,13 @@ kotlin {
 
 compose.desktop {
     application {
-        mainClass = "me.shouheng.devtools.devtools.MainKt"
+        mainClass = "me.shouheng.deproguard.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "Easy I18n"
+            packageName = "DeProguard"
             packageVersion = "1.0.0"
-            description = "An convenient development tool to help you manage i18n resources."
+            description = "An convenient development tool to deproguard error stacks."
             vendor = "wyuhuan"
             copyright = "© 2026 wyuhuan"
             // 添加 java sql 类库
