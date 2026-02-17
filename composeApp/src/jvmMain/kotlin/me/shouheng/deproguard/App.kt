@@ -2,29 +2,19 @@ package me.shouheng.deproguard
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EnhancedEncryption
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationRail
-import androidx.compose.material3.NavigationRailItem
-import androidx.compose.material3.NavigationRailItemDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,19 +25,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import deproguard.composeapp.generated.resources.Res
-import deproguard.composeapp.generated.resources.app_name
-import deproguard.composeapp.generated.resources.ic_logo
-import deproguard.composeapp.generated.resources.tab_home_name
-import deproguard.composeapp.generated.resources.tab_proguard_name
+import deproguard.composeapp.generated.resources.*
 import me.shouheng.deproguard.data.Event.Companion.EVENT_NAME_TO_PAGE
 import me.shouheng.deproguard.data.HomeTabItem
 import me.shouheng.deproguard.data.ROUTE_HOME
-import me.shouheng.deproguard.data.ROUTE_PROGUARD
+import me.shouheng.deproguard.data.ROUTE_SETTINGS
 import me.shouheng.deproguard.manager.MessageManager
 import me.shouheng.deproguard.manager.ThemeManger
-import me.shouheng.deproguard.ui.HomePage
 import me.shouheng.deproguard.ui.ProguardPage
+import me.shouheng.deproguard.ui.SettingsPage
 import me.shouheng.deproguard.ui.widget.CustomSnackbarHost
 import me.shouheng.deproguard.ui.widget.showMessage
 import org.jetbrains.compose.resources.painterResource
@@ -63,8 +49,8 @@ fun App() {
     val currentRoute = currentBackStackEntry?.destination?.route ?: ROUTE_HOME
 
     val tabs = listOf(
-        HomeTabItem(Res.string.tab_home_name, Icons.Default.Home, ROUTE_HOME, { HomePage() }),
-        HomeTabItem(Res.string.tab_proguard_name, Icons.Default.EnhancedEncryption, ROUTE_PROGUARD, { ProguardPage() }),
+        HomeTabItem(Res.string.tab_home_name, Icons.Default.Home, ROUTE_HOME, { ProguardPage() }),
+        HomeTabItem(Res.string.tab_setting_name, Icons.Default.Settings, ROUTE_SETTINGS, { SettingsPage() }),
     )
 
     // 初始化
