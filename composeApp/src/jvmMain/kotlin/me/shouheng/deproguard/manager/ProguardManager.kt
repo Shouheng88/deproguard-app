@@ -2,6 +2,7 @@ package me.shouheng.deproguard.manager
 
 import io.github.vinceglb.filekit.*
 import me.shouheng.deproguard.retrace.MyReTrace
+import me.shouheng.deproguard.retrace.ReTrace
 import me.shouheng.deproguard.utils.json
 import me.shouheng.deproguard.utils.settings
 import java.io.File
@@ -139,8 +140,7 @@ object ProguardManager {
         val file = File(tempDir, "temp-proguard.text")
         file.writeText(text)
 
-//        val proceed = ReTraceTool.handle(mappingFile, dictFile, text)
-        val proceed = MyReTrace.main(
+        val proceed = ReTrace.main(
             arrayOf(
                 mappingFile.path,
                 file.path,

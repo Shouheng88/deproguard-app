@@ -145,10 +145,10 @@ public class ReTrace
     /**
      * De-obfuscates a given stack trace.
      * @param stackTraceReader a reader for the obfuscated stack trace.
-     * @param stackTraceWriter a writer for the de-obfuscated stack trace.
+     * @param handler a writer for the de-obfuscated stack trace.
      */
     public void retrace(LineNumberReader stackTraceReader,
-                        PrintWriter      stackTraceWriter) throws IOException
+                        TraceLineHandler      handler) throws IOException
     {
         // Create a pattern for stack frames.
         FramePattern pattern1 = new FramePattern(regularExpression, verbose);
@@ -181,10 +181,8 @@ public class ReTrace
             // For example: java.lang.NullPointerException: Cannot invoke "com.example.Foo.bar.foo(int)" because the return value of "com.example.Foo.bar.foo2()" is null
             deobf = handle(obfuscatedFrame2, mapper, pattern2, deobf);
 
-            stackTraceWriter.println(deobf);
+            handler.handle(deobf);
         }
-
-        stackTraceWriter.flush();
     }
 
     private String handle(FrameInfo obfuscatedFrame, FrameRemapper mapper, FramePattern pattern, String obfuscatedLine)
@@ -335,7 +333,7 @@ public class ReTrace
     /**
      * The main program for ReTrace.
      */
-    public static void main(String[] args)
+    public static String main(String[] args)
     {
         // Parse the arguments.
         if (args.length < 1)
@@ -399,14 +397,14 @@ public class ReTrace
                 new FileInputStream(stackTraceFile), "UTF-8")));
 
             // Open the output stack trace, again using UTF-8 encoding.
-            PrintWriter writer =
-                new PrintWriter(new OutputStreamWriter(System.out, "UTF-8"));
 
             try
             {
                 // Execute ReTrace with the collected settings.
+                StringBuilder sb = new StringBuilder();
                 new ReTrace(regularExpression, regularExpression2, allClassNames, verbose, mappingFile)
-                    .retrace(reader, writer);
+                    .retrace(reader, (TraceLineHandler) line -> sb.append(line).append("\n"));
+                return sb.toString();
             }
             finally
             {
@@ -434,5 +432,10 @@ public class ReTrace
         }
 
         System.exit(0);
+        return "";
+    }
+
+    private static interface TraceLineHandler {
+        void handle(String line);
     }
 }
