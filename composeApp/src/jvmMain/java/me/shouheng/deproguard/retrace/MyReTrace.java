@@ -36,11 +36,8 @@ public class MyReTrace implements MappingProcessor {
     private final File mappingFile;
     private final File stackTraceFile;
     private final File dictFile;
-    /**
-     * 方法，类名等的参数
-     */
-    private final String defaultElementCharset = "A-Za-z0-9_$";
-    private final String elementCharset;
+
+    private final Map<Character, String> charToNormalMap = new HashMap<>();
     private Map classMap;
     private Map classFieldMap;
     private Map classMethodMap;
@@ -61,13 +58,77 @@ public class MyReTrace implements MappingProcessor {
         this.mappingFile = mappingFile;
         this.stackTraceFile = stackTraceFile;
         this.dictFile = dictFile;
-        this.elementCharset = "A-Za-z0-9_$" + dictCharset();
-        this.regularExpression = regularExpression.replace(defaultElementCharset, elementCharset);
-        this.regexClass = REGEX_CLASS.replace(defaultElementCharset, elementCharset);
-        this.regexClassSlash = REGEX_CLASS_SLASH.replace(defaultElementCharset, elementCharset);
-        this.regexType = REGEX_TYPE.replace(defaultElementCharset, elementCharset);
-        this.regexMember = REGEX_MEMBER.replace(defaultElementCharset, elementCharset);
-        this.regexArguments = REGEX_ARGUMENTS.replace(defaultElementCharset, elementCharset);
+        this.initCharMap();
+        this.regularExpression = regularExpression;
+        this.regexClass = REGEX_CLASS;
+        this.regexClassSlash = REGEX_CLASS_SLASH;
+        this.regexType = REGEX_TYPE;
+        this.regexMember = REGEX_MEMBER;
+        this.regexArguments = REGEX_ARGUMENTS;
+    }
+
+    private void initCharMap() {
+        String dictText = readTextFromDictFile();
+        dictText = dictText.trim();
+        if (dictText.isEmpty()) return;
+        int index = 0;
+        for (int i = 0; i < dictText.length(); i++) {
+            char c = dictText.charAt(i);
+            if (!isNormal(c) && !charToNormalMap.containsKey(c)) {
+                charToNormalMap.put(c, "_v" + (index++) + "_");
+            }
+        }
+    }
+
+    private boolean isNormal(char c) {
+        return (c >= 'a' && c <= 'z')
+                || (c >= 'A' && c <= 'Z')
+                || (c >= '0' && c <= '9')
+                || c == '_'
+                || c == '$'
+                || c == '\n';
+    }
+
+    private String transform(String text) {
+        if (text == null || charToNormalMap.isEmpty()) return text;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (charToNormalMap.containsKey(c)) {
+                sb.append(charToNormalMap.get(c));
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
+    private File transformMappingFile(File mappingFile) throws IOException {
+        String content = readTextFromFile(mappingFile);
+        String transformed = transform(content);
+        File tempFile = File.createTempFile("mapping", ".txt");
+        tempFile.deleteOnExit();
+        try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+            fos.write(transformed.getBytes());
+        }
+        return tempFile;
+    }
+
+    private String readTextFromFile(File file) {
+        if (file != null && file.exists()) {
+            try (FileInputStream fis = new FileInputStream(file);
+                 ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+                byte[] b = new byte[sBufferSize];
+                int len;
+                while ((len = fis.read(b)) != -1) {
+                    os.write(b, 0, len);
+                }
+                return new String(os.toByteArray());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return "";
     }
 
     /**
@@ -77,7 +138,12 @@ public class MyReTrace implements MappingProcessor {
      * @throws IOException 读取文件失败时会抛出异常
      */
     public void execute(TraceLineHandler handler) throws IOException {
-        MappingReader var1 = new MappingReader(this.mappingFile);
+        File transformedMappingFile = mappingFile;
+        if (!charToNormalMap.isEmpty()) {
+            transformedMappingFile = transformMappingFile(mappingFile);
+        }
+
+        MappingReader var1 = new MappingReader(transformedMappingFile);
         var1.pump(this);
         StringBuilder expression = new StringBuilder(this.regularExpression.length() + 32);
         char[] var3 = new char[32];
@@ -103,6 +169,7 @@ public class MyReTrace implements MappingProcessor {
                         if (line == null) {
                             return;
                         }
+                        line = transform(line);
 
                         Matcher matcher = pattern.matcher(line);
                         if (!matcher.matches()) {
@@ -233,32 +300,6 @@ public class MyReTrace implements MappingProcessor {
             var3[var4++] = var7;
             var5 = var6 + 2;
         }
-    }
-
-    /**
-     * 根据传入的混淆字典对反混淆正则表达式字符进行 hook
-     */
-    private String dictCharset() {
-        String dictText = readTextFromDictFile();
-        if (dictText.length() == 0) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
-        Set<Character> set = new HashSet<>();
-        for (int i=0, length=dictText.length(); i<length; i++) {
-            char c = dictText.charAt(i);
-            if (!((c >= 'a' && c <= 'z')
-                    || (c > 'A' && c < 'Z')
-                    || c == '_'
-                    || c == '$'
-                    || c == '\n'
-                    || c == '\r'
-                    || c == ' ') && !set.contains(c)) {
-                set.add(c);
-                sb.append(c);
-            }
-        }
-        return sb.toString();
     }
 
     /**
